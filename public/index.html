@@ -64,19 +64,10 @@ footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
 <main>
 <div class="card">
 
-  <!-- 1. choose -->
-  <section id="s-pick">
+  <!-- pairing code -->
+  <section id="s-code">
     <div class="icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11 21.07l1.5-1.5"/></svg></div>
-    <h1 style="text-align:center">Select Method</h1>
-    <p class="sub">How would you like to link your WhatsApp session?</p>
-    <button class="opt" data-go="code"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>Pairing Code<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-    <button class="opt" data-go="qr"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M20 20v.01M17 20h.01"/></svg>QR Scan<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-  </section>
-
-  <!-- 2. pairing code -->
-  <section id="s-code" class="hide">
-    <button class="back" data-go="pick">← Back</button>
-    <h1>Pairing Code</h1>
+    <h1>Link Device</h1>
     <p class="sub">Enter your number with country code</p>
     <label for="num">PHONE NUMBER</label>
     <div class="field"><span>📞</span><input id="num" type="tel" inputmode="numeric" autocomplete="tel" placeholder="919876543210" maxlength="16"></div>
@@ -92,56 +83,29 @@ footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
       <li><em>01</em><span>Enter your <b>phone number</b> with country code (no + or spaces)</span></li>
       <li><em>02</em><span>Tap generate and wait for the <b>8-character code</b></span></li>
       <li><em>03</em><span>Open <b>WhatsApp → Linked Devices → Link with phone number</b> and enter the code</span></li>
+      <li><em>04</em><span>That's it — the bot <b>activates on your number automatically</b></span></li>
     </ol>
   </section>
 
-  <!-- 3. QR -->
-  <section id="s-qr" class="hide">
-    <button class="back" data-go="pick">← Back</button>
-    <h1>QR Scan</h1>
-    <p class="sub">Open WhatsApp → Linked Devices → Link a device, then scan.</p>
-    <div class="qr hide" id="qrbox"><img id="qrimg" alt="QR code"></div>
-    <div class="timer" id="qrwait" style="text-align:center;margin-top:18px">Generating QR…</div>
-    <div class="err" id="err2"></div>
-  </section>
-
-  <!-- 4. done -->
+  <!-- done -->
   <section id="s-done" class="hide">
     <div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <h1>Device Linked</h1>
-    <p class="sub" id="who">Your Session ID is ready. It was also sent to your WhatsApp chat.</p>
-    <label>SESSION ID</label>
-    <textarea id="sid" readonly></textarea>
-    <button class="btn" id="copySid">COPY SESSION ID</button>
-    <details>
-      <summary>Single-session format (SESSION variable)</summary>
-      <textarea id="sid2" readonly></textarea>
-      <button class="btn ghost" id="copySid2">Copy</button>
-    </details>
-    <div class="warn">⚠️ Never share this Session ID. Anyone who has it can control your WhatsApp account.</div>
+    <h1>Connected</h1>
+    <p class="sub" id="who">Your bot is now active.</p>
+    <div class="warn" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.3);color:#6ee7b7">✅ ZENIT XMD is live on your number. Check your WhatsApp chat for the confirmation message.</div>
     <button class="btn ghost" id="again" style="margin-top:14px">Link another device</button>
   </section>
 
 </div>
 </main>
-<footer>ZENIT XMD · Pairing only — your session is not stored on this server</footer>
+<footer>ZENIT XMD · Pairing only — no session is stored on this server</footer>
 
 <script>
 const $ = (s) => document.querySelector(s);
-const screens = { pick:'#s-pick', code:'#s-code', qr:'#s-qr', done:'#s-done' };
 let poll = null, tick = null, jobId = null;
 
-function show(name){
-  for (const k in screens) $(screens[k]).classList.toggle('hide', k !== name);
-  if (name === 'pick' || name === 'done') stopAll(false);
-}
+function show(name){ $('#s-code').classList.toggle('hide', name !== 'code'); $('#s-done').classList.toggle('hide', name !== 'done'); }
 function stopAll(){ clearInterval(poll); clearInterval(tick); poll = tick = null; jobId = null; }
-document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-go]'); if (!t) return;
-  const go = t.dataset.go;
-  stopAll();
-  if (go === 'qr') { show('qr'); startQR(); } else show(go);
-});
 
 async function post(url, body){
   const r = await fetch(url, { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body || {}) });
@@ -150,32 +114,26 @@ async function post(url, body){
   return j;
 }
 function copy(text, btn, label){
-  const done = () => { const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = label || o, 1500); };
+  const done = () => { btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = label, 1500); };
   if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
   function fallback(){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try{document.execCommand('copy')}catch{} t.remove(); done(); }
 }
 
-function watch(id, onTick){
+function watch(id){
   jobId = id;
   poll = setInterval(async () => {
     try {
-      const r = await fetch('/api/status/' + id); const j = await r.json();
+      const j = await (await fetch('/api/status/' + id)).json();
       if (jobId !== id) return;
-      if (j.state === 'linked') { stopAll(); finish(j); }
-      else if (j.state === 'failed' || j.state === 'gone') { stopAll(); onTick && onTick(j); }
-      else onTick && onTick(j);
+      if (j.state === 'linked') { stopAll(); $('#who').textContent = '+' + j.number + ' is linked and your bot is now active.'; show('done'); }
+      else if (j.state === 'failed' || j.state === 'gone') {
+        stopAll(); $('#codebox').classList.add('hide');
+        $('#err1').textContent = j.error || 'Link expired. Generate a new code.';
+      }
     } catch {}
   }, 2000);
 }
 
-function finish(j){
-  $('#sid').value = j.sessionId;
-  $('#sid2').value = j.sessionBase64;
-  $('#who').textContent = 'Linked +' + j.number + '. Your Session ID is below and was also sent to your WhatsApp chat.';
-  show('done');
-}
-
-// ── pairing code ──
 $('#gen').addEventListener('click', async () => {
   const number = $('#num').value.replace(/\D/g, '');
   $('#err1').textContent = ''; $('#codebox').classList.add('hide');
@@ -193,28 +151,12 @@ $('#gen').addEventListener('click', async () => {
     };
     render();
     tick = setInterval(() => { left = Math.max(0, left - 1); render(); if (!left) clearInterval(tick); }, 1000);
-    watch(j.id, (s) => { if (s.state === 'failed') $('#err1').textContent = s.error || 'Failed. Try again.'; });
+    watch(j.id);
   } catch (e) { $('#err1').textContent = e.message; }
   btn.disabled = false; btn.textContent = 'GENERATE CODE';
 });
 $('#copy').addEventListener('click', (e) => copy($('#code').textContent.replace(/-/g,''), e.target, 'Copy Code'));
-
-// ── QR ──
-async function startQR(){
-  $('#qrbox').classList.add('hide'); $('#err2').textContent = ''; $('#qrwait').textContent = 'Generating QR…'; $('#qrwait').classList.remove('hide');
-  try {
-    const j = await post('/api/qr');
-    $('#qrimg').src = j.qr; $('#qrbox').classList.remove('hide'); $('#qrwait').textContent = 'Waiting for scan… the QR refreshes automatically';
-    watch(j.id, (s) => {
-      if (s.qr) $('#qrimg').src = s.qr;
-      if (s.state === 'failed' || s.state === 'gone') { $('#err2').textContent = s.error || 'Expired. Go back and try again.'; $('#qrwait').classList.add('hide'); }
-    });
-  } catch (e) { $('#qrwait').classList.add('hide'); $('#err2').textContent = e.message; }
-}
-
-$('#copySid').addEventListener('click', (e) => copy($('#sid').value, e.target, 'COPY SESSION ID'));
-$('#copySid2').addEventListener('click', (e) => copy($('#sid2').value, e.target, 'Copy'));
-$('#again').addEventListener('click', () => { $('#sid').value = $('#sid2').value = ''; $('#codebox').classList.add('hide'); show('pick'); });
+$('#again').addEventListener('click', () => { stopAll(); $('#codebox').classList.add('hide'); $('#num').value = ''; show('code'); });
 </script>
 </body>
 </html>
