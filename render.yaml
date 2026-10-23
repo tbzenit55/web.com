@@ -7,5 +7,7 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     envVars:
-      - key: NODE_VERSION
-        value: 22
+      - key: BOT_URL
+        sync: false
+      - key: PAIR_KEY
+        sync: false
