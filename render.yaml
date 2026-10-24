@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: zenit-xmd-pair
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_URL        # public URL of the main bot, e.g. https://bot.example.com:25565
+        sync: false
+      - key: PAIR_KEY       # same value as WEB_PAIR_KEY on the bot
+        sync: false

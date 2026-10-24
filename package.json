@@ -1,0 +1,10 @@
+{
+  "name": "zenit-xmd-pair-web",
+  "version": "2.0.0",
+  "description": "ZENIT XMD pairing website — forwards to the main bot, which links the device directly.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.21.2" }
+}
