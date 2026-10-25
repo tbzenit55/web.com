@@ -11,3 +11,4 @@ services:
         sync: false
       - key: PAIR_KEY       # same value as WEB_PAIR_KEY on the bot
         sync: false
+        
