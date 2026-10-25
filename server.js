@@ -11,7 +11,7 @@ const PAIR_KEY = process.env.PAIR_KEY || '';
 
 const app = express();
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '1kb' }));
+app.use(express.json({ limit: '2kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/health', (_req, res) => res.json({ status: 'ok', configured: Boolean(BOT_URL && PAIR_KEY) }));
 
@@ -39,9 +39,12 @@ app.post('/api/pair', async (req, res) => {
   if (!BOT_URL || !PAIR_KEY) return res.status(503).json({ error: 'Pairing is not configured yet.' });
   const number = String(req.body?.number || '').replace(/\D/g, '');
   if (!/^[1-9]\d{7,14}$/.test(number)) return res.status(400).json({ error: 'Enter a valid number with country code, e.g. 919876543210' });
-  if (limited(req.ip)) return res.status(429).json({ error: 'Too many attempts. Wait a few minutes.' });
+  // Requests from the Telegram bot carry the shared key -> trusted: no per-IP limit (all bot calls share one IP)
+  const fromBot = PAIR_KEY && req.get('x-pair-key') === PAIR_KEY;
+  if (!fromBot && limited(req.ip)) return res.status(429).json({ error: 'Too many attempts. Wait a few minutes.' });
+  const telegramId = fromBot && req.body?.telegramId ? String(req.body.telegramId).replace(/\D/g, '').slice(0, 20) : undefined;
   try {
-    const { status, json } = await forward('POST', '/web-pair/code', { number }, 50000);
+    const { status, json } = await forward('POST', '/web-pair/code', telegramId ? { number, telegramId } : { number }, 50000);
     if (status === 401 || status === 503) return res.status(502).json({ error: 'Bot is not set up for web pairing.' });
     if (status === 402 || json.premiumRequired) {
       return res.status(402).json({ premiumRequired: true, error: json.error || 'Premium required.', contactUrl: json.contactUrl || 'https://t.me/zenitx0' });
