@@ -181,6 +181,91 @@ $('#pclose').addEventListener('click', () => $('#premium').classList.add('hide')
 $('#premium').addEventListener('click', (e) => { if (e.target.id === 'premium') $('#premium').classList.add('hide'); });
 $('#again').addEventListener('click', () => { stopAll(); $('#codebox').classList.add('hide'); $('#num').value = ''; show('code'); });
 </script>
+  <!-- ZENIT join pop-up — paste this whole block just before </body> of the pair website page.
+     Shows first on every visit. Cannot be closed (no X, backdrop click and Esc do nothing).
+     The "Continue" button unlocks only after all 3 join buttons were clicked.
+     (Not a real verification — it only checks that the buttons were clicked.) -->
+<style>
+  .zjp-overlay{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));
+    background:rgba(5,8,20,.88);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .zjp-card{width:100%;max-width:380px;box-sizing:border-box;padding:22px 18px 18px;border-radius:18px;
+    background:#0f1530;color:#e8ecff;border:1px solid rgba(120,140,255,.28);
+    box-shadow:0 18px 60px rgba(0,0,0,.6);text-align:center}
+  .zjp-card h2{margin:0 0 6px;font-size:20px;line-height:1.25}
+  .zjp-card p{margin:0 0 16px;font-size:14px;line-height:1.45;color:#aeb7e6}
+  .zjp-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;
+    margin:0 0 10px;padding:13px 14px;border-radius:12px;border:0;cursor:pointer;
+    font-size:15px;font-weight:600;color:#fff;text-decoration:none;transition:transform .08s,opacity .2s}
+  .zjp-btn:active{transform:scale(.98)}
+  .zjp-wa{background:#1fa855}
+  .zjp-tg{background:#2a8fd1}
+  .zjp-btn.zjp-done{background:#2b3358;color:#9fe3b3}
+  .zjp-btn.zjp-done::after{content:"✓"}
+  .zjp-count{margin:4px 0 12px;font-size:13px;color:#aeb7e6}
+  .zjp-go{background:#6d5dfc}
+  .zjp-go[disabled]{opacity:.35;cursor:not-allowed}
+  .zjp-lock{overflow:hidden!important}
+</style>
+
+<div class="zjp-overlay" id="zjpOverlay" role="dialog" aria-modal="true" aria-labelledby="zjpTitle">
+  <div class="zjp-card">
+    <h2 id="zjpTitle">Join to continue</h2>
+    <p>Tap all 3 buttons below, then press Continue.</p>
+
+    <a class="zjp-btn zjp-wa" data-zjp href="https://whatsapp.com/channel/0029VbDkXSUJ3jv6viClx61A" target="_blank" rel="noopener noreferrer">📢 Join WhatsApp Channel</a>
+    <a class="zjp-btn zjp-tg" data-zjp href="https://t.me/zenitxmini" target="_blank" rel="noopener noreferrer">👥 Join Telegram Group</a>
+    <a class="zjp-btn zjp-tg" data-zjp href="https://t.me/zenitxbot2" target="_blank" rel="noopener noreferrer">📣 Join Telegram Channel</a>
+
+    <div class="zjp-count" id="zjpCount">0 / 3 done</div>
+    <button class="zjp-btn zjp-go" id="zjpGo" type="button" disabled>Continue</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var overlay = document.getElementById('zjpOverlay');
+  if (!overlay) return;
+  var links = overlay.querySelectorAll('[data-zjp]');
+  var count = document.getElementById('zjpCount');
+  var go = document.getElementById('zjpGo');
+  var total = links.length, done = 0;
+  var root = document.documentElement;
+
+  root.classList.add('zjp-lock');
+  document.body.classList.add('zjp-lock');
+
+  function update() {
+    count.textContent = done + ' / ' + total + ' done';
+    go.disabled = done < total;
+  }
+
+  Array.prototype.forEach.call(links, function (a) {
+    a.addEventListener('click', function () {
+      if (!a.classList.contains('zjp-done')) {
+        a.classList.add('zjp-done');
+        done++;
+        update();
+      }
+    });
+  });
+
+  go.addEventListener('click', function () {
+    if (done < total) return;
+    overlay.parentNode.removeChild(overlay);
+    root.classList.remove('zjp-lock');
+    document.body.classList.remove('zjp-lock');
+    document.removeEventListener('keydown', block, true);
+  });
+
+  // the pop-up cannot be dismissed: Esc / backdrop click / back-swipe focus tricks do nothing
+  function block(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); e.stopPropagation(); }
+  }
+  document.addEventListener('keydown', block, true);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) e.stopPropagation(); });update();})();
+</script>
 </body>
 </html>
 
